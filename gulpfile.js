@@ -10,9 +10,12 @@ gulp.task('ts', function () {
     .pipe(gulp.dest('./client/js/'));
 });
 
-gulp.task('server', function () {
-    server.run(['server.js'], {}, false);
-    gulp.watch('./client/ts/*.ts', ['ts']);
+gulp.task('watch', function () {
+    gulp.watch('./client/ts/*.ts', ['ts', 'server']);
 });
 
-gulp.task('default', ["server"]);
+gulp.task('server', function () {
+    server.run(['server.js'], {}, false);
+});
+
+gulp.task('default', ["ts", "watch", "server"]);
