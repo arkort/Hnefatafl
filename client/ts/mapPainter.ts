@@ -1,6 +1,29 @@
 declare var Konva: any;
 
+class BoardCell {
+    x: number;
+    y: number;
+}
+
+function prepareData() {
+    var x = 9;
+    var y = 9;
+    var board = new BoardCell[x][y];
+
+    for (var i = 0; i < x; i++) {
+        for (var j = 0; j < y; j++) {
+            board[i, j] = new BoardCell();
+            board[i, j].x = i;
+            board[i, j].y = j;
+        };
+    }
+
+    return board;
+}
+
 export function draw() {
+    var board = prepareData();
+
     var width = window.innerWidth;
     var height = window.innerHeight;
 
@@ -15,11 +38,11 @@ export function draw() {
     var rect = new Konva.Rect({
         x: 50,
         y: 50,
-        width: 100,
+        width: 50,
         height: 50,
-        fill: 'green',
+        fill: 'white',
         stroke: 'black',
-        strokeWidth: 4
+        strokeWidth: 1
     });
 
     // add the shape to the layer
