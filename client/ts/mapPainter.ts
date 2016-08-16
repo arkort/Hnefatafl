@@ -1,5 +1,12 @@
 declare var Konva: any;
 
+var x: number = 9;
+var y: number = 9;
+var startPos: number = 4;
+var board: BoardCell[][] = [];
+
+var selectedFigure: Figure;
+
 enum Color {
     Black,
     White
@@ -23,13 +30,27 @@ var king = new Konva.Text({
 class Figure {
     constructor(public boardCell: BoardCell, public color: Color, public shape: any) {
         this.shape.on('click', function () {
-            highlight(boardCell);
+            select(boardCell);
         });
+    }
+
+    moveToCell(target: any) {
+        var a = board.find(x => x.cell.id == target.id);
+        this.boardCell.figure = null;
+        this.boardCell = target;
+        target.figure = this;
+        this.draw();
+    }
+
+    draw() {
+        this.shape.setY(50 * this.boardCell.x);
+        this.shape.setX(50 * this.boardCell.y);
+        this.shape.draw();
     }
 }
 
-function highlight(sourceCell: BoardCell) {
-    sourceCell.highlight();
+function select(sourceCell: BoardCell) {
+    sourceCell.select();
 }
 
 class BoardCell {
@@ -44,11 +65,17 @@ class BoardCell {
     right: BoardCell;
     bottom: BoardCell;
 
-    public highlight() {
+    public select() {
+        selectedFigure = this.figure;
         this.highlightBottom();
         this.highlightLeft();
         this.highlightRight();
         this.highlightTop();
+    }
+
+    public deselect() {
+        selectedFigure = null;
+        
     }
 
     public highlightRight() {
@@ -85,30 +112,26 @@ class BoardCell {
     }
 }
 
-var x: number = 9;
-var y: number = 9;
-var startPos: number = 4;
-var board: BoardCell[][] = [];
-
 function prepareBoard() {
 
     for (var i: number = 0; i < x; i++) {
         board[i] = [];
         for (var j: number = 0; j < y; j++) {
-            board[i][j] = new BoardCell();
-            board[i][j].x = i;
-            board[i][j].y = j;
+            var temp: BoardCell = new BoardCell();
+            
+            temp.x = i;
+            temp.y = j;
 
             var fill: string = 'white';
 
             if (i == 0 && (j == 0 || j == y - 1)
                 || i == x - 1 && (j == 0 || j == y - 1)
                 || i == startPos && j == startPos) {
-                board[i][j].isEnd = true;
+                temp.isEnd = true;
                 fill = 'gray';
             }
 
-            board[i][j].cell = new Konva.Rect({
+            temp.cell = new Konva.Rect({
                 y: i * 50,
                 x: j * 50,
                 width: 50,
@@ -117,6 +140,14 @@ function prepareBoard() {
                 stroke: 'black',
                 strokeWidth: 1
             });
+
+            temp.cell.on('click', function () {
+                if (selectedFigure != null) {
+                    selectedFigure.moveToCell(this);
+                }
+            });
+
+            board[i][j] = temp;
         }
     }
 
