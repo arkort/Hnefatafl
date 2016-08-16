@@ -1,6 +1,6 @@
 declare var Konva: any;
 
-enum CellColor {
+enum Color {
     Black,
     White
 }
@@ -15,28 +15,82 @@ var king = new Konva.Text({
     fontFamily: 'Calibri',
     fill: 'white',
     stroke: 'black',
-    strokeWidth: 1
+    strokeWidth: 1,
+    width: 50,
+    height: 50
 });
 
 class Figure {
-    constructor(public boardCell: BoardCell, public color: CellColor, public shape: any) {
+    constructor(public boardCell: BoardCell, public color: Color, public shape: any) {
+        this.shape.on('click', function () {
+            highlight(boardCell);
+        });
     }
+}
+
+function highlight(sourceCell: BoardCell) {
+    sourceCell.highlight();
 }
 
 class BoardCell {
     x: number;
     y: number;
-    cell: any;
+    cell: any; //shape
     isEnd: boolean;
+    isHighlighted: boolean;
     figure: Figure;
+    top: BoardCell;
+    left: BoardCell;
+    right: BoardCell;
+    bottom: BoardCell;
+
+    public highlight() {
+        this.highlightBottom();
+        this.highlightLeft();
+        this.highlightRight();
+        this.highlightTop();
+    }
+
+    public highlightRight() {
+        if (this.right != null && this.right.figure == null) {
+            this.right.isHighlighted = true;
+            this.right.cell.fill('yellow');
+            this.right.cell.draw();
+            this.right.highlightRight();
+        }
+    }
+    public highlightLeft() {
+        if (this.left != null && this.left.figure == null) {
+            this.left.isHighlighted = true;
+            this.left.cell.fill('yellow');
+            this.left.cell.draw();
+            this.left.highlightLeft();
+        }
+    }
+    public highlightTop() {
+        if (this.top != null && this.top.figure == null) {
+            this.top.isHighlighted = true;
+            this.top.cell.fill('yellow');
+            this.top.cell.draw();
+            this.top.highlightTop();
+        }
+    }
+    public highlightBottom() {
+        if (this.bottom != null && this.bottom.figure == null) {
+            this.bottom.isHighlighted = true;
+            this.bottom.cell.fill('yellow');
+            this.bottom.cell.draw();
+            this.bottom.highlightBottom();
+        }
+    }
 }
 
 var x: number = 9;
 var y: number = 9;
 var startPos: number = 4;
+var board: BoardCell[][] = [];
 
 function prepareBoard() {
-    var board: BoardCell[][] = [];
 
     for (var i: number = 0; i < x; i++) {
         board[i] = [];
@@ -55,8 +109,8 @@ function prepareBoard() {
             }
 
             board[i][j].cell = new Konva.Rect({
-                x: i * 50,
-                y: j * 50,
+                y: i * 50,
+                x: j * 50,
                 width: 50,
                 height: 50,
                 fill: fill,
@@ -66,19 +120,47 @@ function prepareBoard() {
         }
     }
 
+    for (var i: number = 0; i < x; i++) {
+        for (var j: number = 0; j < y; j++) {
+            if (i != 0) {
+                board[i][j].top = board[i - 1][j];
+            }
+            if (i != x - 1) {
+                board[i][j].bottom = board[i + 1][j];
+            }
+            if (j != 0) {
+                board[i][j].left = board[i][j - 1];
+            }
+            if (j != y - 1) {
+                board[i][j].right = board[i][j + 1];
+            }
+        }
+    }
+    
+
     return board;
 }
 
-function prepareFigures(board: BoardCell[][]) {
-    board[4][4].figure = new Figure(board[4][4], CellColor.White, king);
+function prepareFigures() {
+    board[4][4].figure = new Figure(board[4][4], Color.White, king);
+    board[4][6].figure = new Figure(board[4][6], Color.White, new Konva.Text({
+        text: 'F',
+        fontSize: 45,
+        fontFamily: 'Calibri',
+        fill: 'white',
+        stroke: 'black',
+        strokeWidth: 1,
+        width: 50,
+        height: 50
+    }));
 }
 
-function drawFigures(board: BoardCell[][], layer: any) {
+function drawFigures(layer: any) {
     for (var i: number = 0; i < x; i++) {
         for (var j: number = 0; j < y; j++) {
             if (board[i][j].figure != null) {
-                board[i][j].figure.shape.setX(i * 50);
-                board[i][j].figure.shape.setY(j * 50);
+                board[i][j].figure.shape.setY(i * 50);
+                board[i][j].figure.shape.setX(j * 50);
                 layer.add(board[i][j].figure.shape);
             }
         }
@@ -90,7 +172,7 @@ function drawFigures(board: BoardCell[][], layer: any) {
 export function draw() {
     var board = prepareBoard();
 
-    prepareFigures(board);
+    prepareFigures();
 
     var width = window.innerWidth;
     var height = window.innerHeight;
@@ -111,7 +193,7 @@ export function draw() {
 
     var figureLayer = new Konva.Layer();
 
-    drawFigures(board, figureLayer);
+    drawFigures(figureLayer);
     // add the layer to the stage
     stage.add(boardLayer);
     stage.add(figureLayer);
