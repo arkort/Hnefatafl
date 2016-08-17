@@ -50,7 +50,7 @@ function deselect() {
 class Figure {
     constructor(public boardCell: BoardCell, public color: Color, public shape: any) {
         let _this: Figure = this;
-        this.shape.on('click', function (e) {
+        this.shape.on('click', function () {
             deselect();
             _this.select();
         });
@@ -84,7 +84,7 @@ class BoardCell {
 
     constructor(public cell: any) {
         let _this: BoardCell = this;
-        this.cell.on('click', function (e) {
+        this.cell.on('click', function () {
             deselect();
         });
     }
@@ -128,12 +128,12 @@ function prepareBoard() {
     for (let i: number = 0; i < x; i++) {
         board[i] = [];
         for (let j: number = 0; j < y; j++) {
-            var temp: BoardCell = new BoardCell(new Konva.Rect({
-                x: i * 50,
-                y: j * 50,
+
+            board[i][j] = new BoardCell(new Konva.Rect({
+                y: i * 50,
+                x: j * 50,
                 width: 50,
                 height: 50,
-                fill: fill,
                 stroke: 'black',
                 strokeWidth: 1
             }));
@@ -143,11 +143,11 @@ function prepareBoard() {
             if (i == 0 && (j == 0 || j == y - 1)
                 || i == x - 1 && (j == 0 || j == y - 1)
                 || i == startPos && j == startPos) {
-                temp.isEnd = true;
+                board[i][j].isEnd = true;
                 fill = 'gray';
             }
 
-            board[i][j] = temp;
+            board[i][j].cell.fill(fill);
         }
     }
 
