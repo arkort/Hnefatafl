@@ -27,19 +27,41 @@ var king = new Konva.Text({
     height: 50
 });
 
+function deselect() {
+    selectedFigure = null;
+
+    for (let i: number = 0; i < x; i++) {
+        for (let j: number = 0; j < y; j++) {
+            let fill: string = 'white';
+
+            if (i == 0 && (j == 0 || j == y - 1)
+                || i == x - 1 && (j == 0 || j == y - 1)
+                || i == startPos && j == startPos) {
+                fill = 'gray';
+            }
+
+            board[i][j].isHighlighted = false;
+            board[i][j].cell.fill(fill);
+            board[i][j].cell.draw();
+        }
+    }
+}
+
 class Figure {
     constructor(public boardCell: BoardCell, public color: Color, public shape: any) {
-        this.shape.on('click', function () {
-            select(boardCell);
+        let _this: Figure = this;
+        this.shape.on('click', function (e) {
+            deselect();
+            _this.select();
         });
     }
 
-    moveToCell(target: any) {
-        var a = board.find(x => x.cell.id == target.id);
-        this.boardCell.figure = null;
-        this.boardCell = target;
-        target.figure = this;
-        this.draw();
+    public select() {
+        selectedFigure = this;
+        this.boardCell.highlightBottom();
+        this.boardCell.highlightLeft();
+        this.boardCell.highlightRight();
+        this.boardCell.highlightTop();
     }
 
     draw() {
@@ -49,14 +71,9 @@ class Figure {
     }
 }
 
-function select(sourceCell: BoardCell) {
-    sourceCell.select();
-}
-
 class BoardCell {
     x: number;
     y: number;
-    cell: any; //shape
     isEnd: boolean;
     isHighlighted: boolean;
     figure: Figure;
@@ -65,17 +82,11 @@ class BoardCell {
     right: BoardCell;
     bottom: BoardCell;
 
-    public select() {
-        selectedFigure = this.figure;
-        this.highlightBottom();
-        this.highlightLeft();
-        this.highlightRight();
-        this.highlightTop();
-    }
-
-    public deselect() {
-        selectedFigure = null;
-        
+    constructor(public cell: any) {
+        let _this: BoardCell = this;
+        this.cell.on('click', function (e) {
+            deselect();
+        });
     }
 
     public highlightRight() {
@@ -114,15 +125,20 @@ class BoardCell {
 
 function prepareBoard() {
 
-    for (var i: number = 0; i < x; i++) {
+    for (let i: number = 0; i < x; i++) {
         board[i] = [];
-        for (var j: number = 0; j < y; j++) {
-            var temp: BoardCell = new BoardCell();
-            
-            temp.x = i;
-            temp.y = j;
+        for (let j: number = 0; j < y; j++) {
+            var temp: BoardCell = new BoardCell(new Konva.Rect({
+                x: i * 50,
+                y: j * 50,
+                width: 50,
+                height: 50,
+                fill: fill,
+                stroke: 'black',
+                strokeWidth: 1
+            }));
 
-            var fill: string = 'white';
+            let fill: string = 'white';
 
             if (i == 0 && (j == 0 || j == y - 1)
                 || i == x - 1 && (j == 0 || j == y - 1)
@@ -131,28 +147,12 @@ function prepareBoard() {
                 fill = 'gray';
             }
 
-            temp.cell = new Konva.Rect({
-                y: i * 50,
-                x: j * 50,
-                width: 50,
-                height: 50,
-                fill: fill,
-                stroke: 'black',
-                strokeWidth: 1
-            });
-
-            temp.cell.on('click', function () {
-                if (selectedFigure != null) {
-                    selectedFigure.moveToCell(this);
-                }
-            });
-
             board[i][j] = temp;
         }
     }
 
-    for (var i: number = 0; i < x; i++) {
-        for (var j: number = 0; j < y; j++) {
+    for (let i: number = 0; i < x; i++) {
+        for (let j: number = 0; j < y; j++) {
             if (i != 0) {
                 board[i][j].top = board[i - 1][j];
             }
