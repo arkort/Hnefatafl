@@ -3,46 +3,61 @@ declare var Konva: any;
 var x: number = 9;
 var y: number = 9;
 var startPos: number = 4;
+var cellSize: number = 75;
 var board: BoardCell[][] = [];
 
 var selectedFigure: Figure;
+
+var kingImg = new Image();
+kingImg.src = "../img/king.png";
+
+var whiteFigImg = new Image();
+whiteFigImg.src = "../img/white.png";
+
+var blackFigImg = new Image();
+blackFigImg.src = "../img/black.png";
 
 enum Color {
     Black,
     White
 }
 
-var figure = new Konva.Text({
-    text:'F'
+var blackFigure = new Konva.Image({
+    image: blackFigImg,
+    width: cellSize,
+    height: cellSize
 });
 
-var king = new Konva.Text({
-    text: 'K',
-    fontSize: 45,
-    fontFamily: 'Calibri',
-    fill: 'white',
-    stroke: 'black',
-    strokeWidth: 1,
-    width: 50,
-    height: 50
-});
+function getKingFigure() {
+    return new Konva.Image({
+        image: kingImg,
+        width: cellSize,
+        height: cellSize
+    });
+}
+
+function getWhiteFigure() {
+    return new Konva.Image({
+        image: whiteFigImg,
+        width: cellSize,
+        height: cellSize
+    });
+}
+
+function getBlackFigure() {
+    return new Konva.Image({
+        image: blackFigImg,
+        width: cellSize,
+        height: cellSize
+    });
+}
 
 function deselect() {
-    selectedFigure = null;
+    selectedFigure = undefined;
 
     for (let i: number = 0; i < x; i++) {
         for (let j: number = 0; j < y; j++) {
-            let fill: string = 'white';
-
-            if (i == 0 && (j == 0 || j == y - 1)
-                || i == x - 1 && (j == 0 || j == y - 1)
-                || i == startPos && j == startPos) {
-                fill = 'gray';
-            }
-
-            board[i][j].isHighlighted = false;
-            board[i][j].cell.fill(fill);
-            board[i][j].cell.draw();
+            board[i][j].dehighlight();
         }
     }
 }
@@ -50,7 +65,7 @@ function deselect() {
 class Figure {
     constructor(public boardCell: BoardCell, public color: Color, public shape: any) {
         let _this: Figure = this;
-        this.shape.on('click', function () {
+        this.shape.on("click", function () {
             deselect();
             _this.select();
         });
@@ -65,8 +80,8 @@ class Figure {
     }
 
     draw() {
-        this.shape.setY(50 * this.boardCell.x);
-        this.shape.setX(50 * this.boardCell.y);
+        this.shape.setX(cellSize * this.boardCell.x);
+        this.shape.setY(cellSize * this.boardCell.y);
         this.shape.draw();
     }
 }
@@ -74,6 +89,7 @@ class Figure {
 class BoardCell {
     x: number;
     y: number;
+    isStart: boolean;
     isEnd: boolean;
     isHighlighted: boolean;
     figure: Figure;
@@ -83,43 +99,53 @@ class BoardCell {
     bottom: BoardCell;
 
     constructor(public cell: any) {
-        let _this: BoardCell = this;
-        this.cell.on('click', function () {
+        this.cell.on("click", function () {
             deselect();
         });
     }
 
     public highlightRight() {
-        if (this.right != null && this.right.figure == null) {
+        if (this.right != undefined && this.right.figure == undefined) {
             this.right.isHighlighted = true;
-            this.right.cell.fill('yellow');
+            this.right.cell.fill("yellow");
             this.right.cell.draw();
             this.right.highlightRight();
         }
     }
     public highlightLeft() {
-        if (this.left != null && this.left.figure == null) {
+        if (this.left != undefined && this.left.figure == undefined) {
             this.left.isHighlighted = true;
-            this.left.cell.fill('yellow');
+            this.left.cell.fill("yellow");
             this.left.cell.draw();
             this.left.highlightLeft();
         }
     }
     public highlightTop() {
-        if (this.top != null && this.top.figure == null) {
+        if (this.top != undefined && this.top.figure == undefined) {
             this.top.isHighlighted = true;
-            this.top.cell.fill('yellow');
+            this.top.cell.fill("yellow");
             this.top.cell.draw();
             this.top.highlightTop();
         }
     }
     public highlightBottom() {
-        if (this.bottom != null && this.bottom.figure == null) {
+        if (this.bottom != undefined && this.bottom.figure == undefined) {
             this.bottom.isHighlighted = true;
             this.bottom.cell.fill('yellow');
             this.bottom.cell.draw();
             this.bottom.highlightBottom();
         }
+    }
+
+    public dehighlight() {
+        if (!this.isStart && !this.isEnd) {
+            this.cell.fill("white");
+        }
+        else {
+            this.cell.fill("gray");
+        }
+        this.isHighlighted = false;
+        this.cell.draw();
     }
 }
 
@@ -130,21 +156,28 @@ function prepareBoard() {
         for (let j: number = 0; j < y; j++) {
 
             board[i][j] = new BoardCell(new Konva.Rect({
-                y: i * 50,
-                x: j * 50,
-                width: 50,
-                height: 50,
-                stroke: 'black',
+                y: i * cellSize,
+                x: j * cellSize,
+                width: cellSize,
+                height: cellSize,
+                stroke: "black",
                 strokeWidth: 1
             }));
 
-            let fill: string = 'white';
+            board[i][j].x = j;
+            board[i][j].y = i;
+
+            let fill: string = "white";
 
             if (i == 0 && (j == 0 || j == y - 1)
-                || i == x - 1 && (j == 0 || j == y - 1)
-                || i == startPos && j == startPos) {
+                || i == x - 1 && (j == 0 || j == y - 1)) {
                 board[i][j].isEnd = true;
-                fill = 'gray';
+                fill = "gray";
+            }
+
+            if (i == startPos && j == startPos) {
+                board[i][j].isStart = true;
+                fill = "gray";
             }
 
             board[i][j].cell.fill(fill);
@@ -167,32 +200,50 @@ function prepareBoard() {
             }
         }
     }
-    
+
 
     return board;
 }
 
 function prepareFigures() {
-    board[4][4].figure = new Figure(board[4][4], Color.White, king);
-    board[4][6].figure = new Figure(board[4][6], Color.White, new Konva.Text({
-        text: 'F',
-        fontSize: 45,
-        fontFamily: 'Calibri',
-        fill: 'white',
-        stroke: 'black',
-        strokeWidth: 1,
-        width: 50,
-        height: 50
-    }));
+    board[4][4].figure = new Figure(board[4][4], Color.White, getKingFigure());
+
+    board[4][2].figure = new Figure(board[4][2], Color.White, getWhiteFigure());
+    board[4][3].figure = new Figure(board[4][3], Color.White, getWhiteFigure());
+    board[4][5].figure = new Figure(board[4][5], Color.White, getWhiteFigure());
+    board[4][6].figure = new Figure(board[4][6], Color.White, getWhiteFigure());
+    board[2][4].figure = new Figure(board[2][4], Color.White, getWhiteFigure());
+    board[3][4].figure = new Figure(board[3][4], Color.White, getWhiteFigure());
+    board[5][4].figure = new Figure(board[5][4], Color.White, getWhiteFigure());
+    board[6][4].figure = new Figure(board[6][4], Color.White, getWhiteFigure());
+
+    board[0][3].figure = new Figure(board[0][3], Color.Black, getBlackFigure());
+    board[0][4].figure = new Figure(board[0][4], Color.Black, getBlackFigure());
+    board[0][5].figure = new Figure(board[0][5], Color.Black, getBlackFigure());
+    board[1][4].figure = new Figure(board[1][4], Color.Black, getBlackFigure());
+
+    board[8][3].figure = new Figure(board[8][3], Color.Black, getBlackFigure());
+    board[8][4].figure = new Figure(board[8][4], Color.Black, getBlackFigure());
+    board[8][5].figure = new Figure(board[8][5], Color.Black, getBlackFigure());
+    board[7][4].figure = new Figure(board[7][4], Color.Black, getBlackFigure());
+
+    board[3][0].figure = new Figure(board[3][0], Color.Black, getBlackFigure());
+    board[4][0].figure = new Figure(board[4][0], Color.Black, getBlackFigure());
+    board[5][0].figure = new Figure(board[5][0], Color.Black, getBlackFigure());
+    board[4][1].figure = new Figure(board[4][1], Color.Black, getBlackFigure());
+
+    board[3][8].figure = new Figure(board[3][8], Color.Black, getBlackFigure());
+    board[4][8].figure = new Figure(board[4][8], Color.Black, getBlackFigure());
+    board[5][8].figure = new Figure(board[5][8], Color.Black, getBlackFigure());
+    board[4][7].figure = new Figure(board[4][7], Color.Black, getBlackFigure());
 }
 
 function drawFigures(layer: any) {
-    for (var i: number = 0; i < x; i++) {
-        for (var j: number = 0; j < y; j++) {
-            if (board[i][j].figure != null) {
-                board[i][j].figure.shape.setY(i * 50);
-                board[i][j].figure.shape.setX(j * 50);
+    for (let i: number = 0; i < x; i++) {
+        for (let j: number = 0; j < y; j++) {
+            if (board[i][j].figure != undefined) {
                 layer.add(board[i][j].figure.shape);
+                board[i][j].figure.draw();
             }
         }
     }
@@ -201,31 +252,32 @@ function drawFigures(layer: any) {
 }
 
 export function draw() {
-    var board = prepareBoard();
+    let board = prepareBoard();
 
-    prepareFigures();
+    let width = window.innerWidth;
+    let height = window.innerHeight;
 
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-
-    var stage = new Konva.Stage({
-        container: 'container',
+    let stage = new Konva.Stage({
+        container: "container",
         width: width,
         height: height
     });
 
-    var boardLayer = new Konva.Layer();
+    let boardLayer = new Konva.Layer();
 
-    for (var i: number = 0; i < x; i++) {
-        for (var j: number = 0; j < y; j++) {
+    for (let i: number = 0; i < x; i++) {
+        for (let j: number = 0; j < y; j++) {
             boardLayer.add(board[i][j].cell);
         }
     }
 
-    var figureLayer = new Konva.Layer();
-
-    drawFigures(figureLayer);
     // add the layer to the stage
     stage.add(boardLayer);
+
+    let figureLayer = new Konva.Layer();
+
     stage.add(figureLayer);
+
+    prepareFigures();
+    drawFigures(figureLayer);
 }
