@@ -32,7 +32,7 @@ var blackFigure = new Konva.Image({
     height: cellSize
 });
 
-function getKingFigure() {
+function getKingFigure(): void {
     return new Konva.Image({
         image: kingImg,
         width: cellSize,
@@ -40,7 +40,7 @@ function getKingFigure() {
     });
 }
 
-function getWhiteFigure() {
+function getWhiteFigure(): void {
     return new Konva.Image({
         image: whiteFigImg,
         width: cellSize,
@@ -48,7 +48,7 @@ function getWhiteFigure() {
     });
 }
 
-function getBlackFigure() {
+function getBlackFigure(): void {
     return new Konva.Image({
         image: blackFigImg,
         width: cellSize,
@@ -56,7 +56,7 @@ function getBlackFigure() {
     });
 }
 
-function deselect() {
+function deselect(): void {
     selectedFigure = undefined;
 
     for (let i: number = 0; i < x; i++) {
@@ -75,7 +75,7 @@ class Figure {
         });
     }
 
-    select() {
+    select(): void {
         selectedFigure = this;
         this.boardCell.highlightBottom();
         this.boardCell.highlightLeft();
@@ -83,7 +83,7 @@ class Figure {
         this.boardCell.highlightTop();
     }
 
-    moveTo(cell: BoardCell) {
+    moveTo(cell: BoardCell): void {
         this.boardCell.figure = undefined;
         cell.figure = this;
         this.boardCell = cell;
@@ -91,23 +91,79 @@ class Figure {
         this.draw();
     }
 
-    checkNeighbours() {
-        if (this.boardCell.right != undefined
-            && this.boardCell.right.figure != undefined
-            && this.boardCell.right.figure.color != this.color
-            && (this.boardCell.right.right == undefined
-                || (this.boardCell.right.right.figure != undefined
-                    && this.boardCell.right.right.figure.color == this.color))) {
+    checkNeighbours(): void {
+        if (this.tryToDestroyRight()) {
             this.boardCell.right.figure.destroy();
+        }
+        if (this.tryToDestroyLeft()) {
+            this.boardCell.left.figure.destroy();
+        }
+        if (this.tryToDestroyTop()) {
+            this.boardCell.top.figure.destroy();
+        }
+        if (this.tryToDestroyBottom()) {
+            this.boardCell.bottom.figure.destroy();
         }
     }
 
-    destroy() {
+    private tryToDestroyRight(): boolean {
+        return this.boardCell.right != undefined
+            && this.boardCell.right.figure != undefined
+            && this.boardCell.right.figure.color != this.color
+            && this.boardCell.right.figure.isDangerToRight();
+    }
+
+    private tryToDestroyLeft(): boolean {
+        return this.boardCell.left != undefined
+            && this.boardCell.left.figure != undefined
+            && this.boardCell.left.figure.color != this.color
+            && this.boardCell.left.figure.isDangerToLeft();
+    }
+
+    private tryToDestroyTop(): boolean {
+        return this.boardCell.top != undefined
+            && this.boardCell.top.figure != undefined
+            && this.boardCell.top.figure.color != this.color
+            && this.boardCell.top.figure.isDangerToTop();
+    }
+
+    private tryToDestroyBottom(): boolean {
+        return this.boardCell.bottom != undefined
+            && this.boardCell.bottom.figure != undefined
+            && this.boardCell.bottom.figure.color != this.color
+            && this.boardCell.bottom.figure.isDangerToBottom();
+    }
+
+    private isDangerToRight(): boolean {
+        return this.boardCell.right != undefined
+            && (this.boardCell.right.isEnd
+                || (this.boardCell.right.figure != undefined && this.boardCell.right.figure.color != this.color));
+    }
+
+    private isDangerToLeft(): boolean {
+        return this.boardCell.left != undefined
+            && (this.boardCell.left.isEnd
+            || (this.boardCell.left.figure != undefined && this.boardCell.left.figure.color != this.color));
+    }
+
+    private isDangerToTop(): boolean {
+        return this.boardCell.top != undefined
+            && (this.boardCell.top.isEnd
+            || (this.boardCell.top.figure != undefined && this.boardCell.top.figure.color != this.color));
+    }
+
+    private isDangerToBottom(): boolean {
+        return this.boardCell.bottom != undefined
+            && (this.boardCell.bottom.isEnd
+            || (this.boardCell.bottom.figure != undefined && this.boardCell.bottom.figure.color != this.color));
+    }
+
+    destroy(): void {
         this.boardCell.figure = undefined;
         this.shape.destroy();
     }
 
-    draw() {
+    draw(): void {
         this.shape.setX(cellSize * this.boardCell.x);
         this.shape.setY(cellSize * this.boardCell.y);
         figureLayer.draw();
@@ -136,7 +192,7 @@ class BoardCell {
         });
     }
 
-    public highlightRight() {
+    public highlightRight(): void {
         if (this.right != undefined && this.right.figure == undefined) {
             this.right.isHighlighted = true;
             this.right.cell.fill("yellow");
@@ -144,7 +200,7 @@ class BoardCell {
             this.right.highlightRight();
         }
     }
-    public highlightLeft() {
+    public highlightLeft(): void {
         if (this.left != undefined && this.left.figure == undefined) {
             this.left.isHighlighted = true;
             this.left.cell.fill("yellow");
@@ -152,7 +208,7 @@ class BoardCell {
             this.left.highlightLeft();
         }
     }
-    public highlightTop() {
+    public highlightTop(): void {
         if (this.top != undefined && this.top.figure == undefined) {
             this.top.isHighlighted = true;
             this.top.cell.fill("yellow");
@@ -160,7 +216,7 @@ class BoardCell {
             this.top.highlightTop();
         }
     }
-    public highlightBottom() {
+    public highlightBottom(): void {
         if (this.bottom != undefined && this.bottom.figure == undefined) {
             this.bottom.isHighlighted = true;
             this.bottom.cell.fill('yellow');
@@ -169,7 +225,7 @@ class BoardCell {
         }
     }
 
-    public dehighlight() {
+    public dehighlight(): void {
         if (!this.isStart && !this.isEnd) {
             this.cell.fill("white");
         }
@@ -181,7 +237,7 @@ class BoardCell {
     }
 }
 
-function prepareBoard() {
+function prepareBoard(): void {
 
     for (let i: number = 0; i < x; i++) {
         board[i] = [];
@@ -237,7 +293,7 @@ function prepareBoard() {
     return board;
 }
 
-function prepareFigures() {
+function prepareFigures(): void {
     board[4][4].figure = new Figure(board[4][4], Color.White, getKingFigure());
 
     board[4][2].figure = new Figure(board[4][2], Color.White, getWhiteFigure());
@@ -270,7 +326,7 @@ function prepareFigures() {
     board[4][7].figure = new Figure(board[4][7], Color.Black, getBlackFigure());
 }
 
-function drawFigures(layer: any) {
+function drawFigures(layer: any): void {
     for (let i: number = 0; i < x; i++) {
         for (let j: number = 0; j < y; j++) {
             if (board[i][j].figure != undefined) {
