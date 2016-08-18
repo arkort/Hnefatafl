@@ -87,14 +87,30 @@ class Figure {
         this.boardCell.figure = undefined;
         cell.figure = this;
         this.boardCell = cell;
+        this.checkNeighbours();
         this.draw();
-        figureLayer.draw();
+    }
+
+    checkNeighbours() {
+        if (this.boardCell.right != undefined
+            && this.boardCell.right.figure != undefined
+            && this.boardCell.right.figure.color != this.color
+            && (this.boardCell.right.right == undefined
+                || (this.boardCell.right.right.figure != undefined
+                    && this.boardCell.right.right.figure.color == this.color))) {
+            this.boardCell.right.figure.destroy();
+        }
+    }
+
+    destroy() {
+        this.boardCell.figure = undefined;
+        this.shape.destroy();
     }
 
     draw() {
         this.shape.setX(cellSize * this.boardCell.x);
         this.shape.setY(cellSize * this.boardCell.y);
-        this.shape.draw();
+        figureLayer.draw();
     }
 }
 
@@ -113,7 +129,6 @@ class BoardCell {
     constructor(public cell: any) {
         let _this: BoardCell = this;
         this.cell.on("click", function () {
-
             if (selectedFigure != undefined && _this.isHighlighted) {
                 selectedFigure.moveTo(_this);
             }
