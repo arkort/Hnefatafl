@@ -17,6 +17,10 @@ whiteFigImg.src = "../img/white.png";
 var blackFigImg = new Image();
 blackFigImg.src = "../img/black.png";
 
+var boardLayer = new Konva.Layer();
+
+var figureLayer = new Konva.Layer();
+
 enum Color {
     Black,
     White
@@ -71,12 +75,20 @@ class Figure {
         });
     }
 
-    public select() {
+    select() {
         selectedFigure = this;
         this.boardCell.highlightBottom();
         this.boardCell.highlightLeft();
         this.boardCell.highlightRight();
         this.boardCell.highlightTop();
+    }
+
+    moveTo(cell: BoardCell) {
+        this.boardCell.figure = undefined;
+        cell.figure = this;
+        this.boardCell = cell;
+        this.draw();
+        figureLayer.draw();
     }
 
     draw() {
@@ -99,7 +111,12 @@ class BoardCell {
     bottom: BoardCell;
 
     constructor(public cell: any) {
+        let _this: BoardCell = this;
         this.cell.on("click", function () {
+
+            if (selectedFigure != undefined && _this.isHighlighted) {
+                selectedFigure.moveTo(_this);
+            }
             deselect();
         });
     }
@@ -263,8 +280,6 @@ export function draw() {
         height: height
     });
 
-    let boardLayer = new Konva.Layer();
-
     for (let i: number = 0; i < x; i++) {
         for (let j: number = 0; j < y; j++) {
             boardLayer.add(board[i][j].cell);
@@ -273,8 +288,6 @@ export function draw() {
 
     // add the layer to the stage
     stage.add(boardLayer);
-
-    let figureLayer = new Konva.Layer();
 
     stage.add(figureLayer);
 
